@@ -2,6 +2,8 @@ import Head from "next/head";
 import Image from "next/image";
 import { Geist, Geist_Mono } from "next/font/google";
 import styles from "@/styles/Home.module.css";
+import { Graph } from "@/components/graph"; // adjust path if needed
+import data from "@/data/healthcare.json"; // or wherever your dataset is
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

@@ -1,39 +1,56 @@
-
-export function getTree( data, attrs) {
-    // console.log("data:", data);
-    const getLevels = (attr) => {
-        const attrArray = data.map(d => d[attr]);
-        // console.log("attrArray:", attrArray);
-        const levels = attrArray.filter( (d, idx) => attrArray.indexOf(d) === idx).sort();
-        return levels.map( d => {return {"name": d, "attr": attr}});
+export function getTree(data, attrs) {
+    const getLevels = (attr, fallbackAttr) => {
+      if (attr === "_placeholder") attr = fallbackAttr;
+      const attrArray = data.map(d => d[attr]);
+      const levels = [...new Set(attrArray)].sort();
+      return levels.map(val => ({ name: val, attr }));
     };
-    const levels = attrs.map( d => getLevels(d));
-    // console.log("levels:", levels);
-    const getJsonTree = function( data, levels ) {
-        let itemArr = [];
-        if(levels.length === 0) {
-            //itemArr.push(data);
-            return null;
-        }
-        const currentLevel = levels[0];
-        for (let i = 0; i < currentLevel.length; i++) {
-            let node = currentLevel[i];
-            let newData = data.filter(d => d[currentLevel[0].attr] === currentLevel[i].name)
-            if (newData.length > 0){
-                let newNode = {};
-                newNode.points = newData;
-                newNode.name = node.name;
-                newNode.attr = node.attr;
-                newNode.value = newData.length; //number of patients
-                // newNode.value = newData.length/data.length; // portion of patients
-                let children = getJsonTree(newData, levels.slice(1));
-                if (children) {
-                    newNode.children = children;
-                }
-                itemArr.push(newNode);
-            }
-        }
-        return itemArr;
+  
+    const realAttrs = attrs.filter(a => a !== "_placeholder");
+    let levels;
+  
+    if (realAttrs.length === 0) {
+      // Use disease attribute as root level
+      const diseaseAttr = "stroke"; // or pass this dynamically
+      const attrArray = data.map(d => d[diseaseAttr]);
+      const level = [...new Set(attrArray)].map(val => ({
+        name: val,
+        attr: diseaseAttr
+      }));
+      levels = [level];
+    } else {
+      levels = attrs.map((attr, idx) => {
+        const fallback = idx === 0 ? realAttrs[0] : realAttrs[idx - 1] || realAttrs[0];
+        return getLevels(attr, fallback);
+      });
+    }
+  
+    const getJsonTree = (data, levels) => {
+      if (levels.length === 0) return null;
+  
+      const currentLevel = levels[0];
+      const groupedNodes = [];
+  
+      for (const levelValue of currentLevel) {
+        const filtered = data.filter(d => d[levelValue.attr] === levelValue.name);
+        if (filtered.length === 0) continue;
+  
+        const node = {
+          name: levelValue.name,
+          attr: levelValue.attr,
+          value: filtered.length,
+          points: filtered
+        };
+  
+        const children = getJsonTree(filtered, levels.slice(1));
+        if (children) node.children = children;
+  
+        groupedNodes.push(node);
+      }
+  
+      return groupedNodes;
     };
+  
     return getJsonTree(data, levels);
-}
+  }
+  

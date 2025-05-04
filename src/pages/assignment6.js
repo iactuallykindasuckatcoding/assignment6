@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import * as d3 from "d3";
 import 'bootstrap/dist/css/bootstrap.css'
@@ -21,7 +22,7 @@ function useData(csvPath){
 
 const App = () => {
     const [selectedDisease, setSelectedDisease] = useState("stroke");
-    const [firstAttr, setFirstAttr] = useState("stroke");
+    const [firstAttr, setFirstAttr] = useState("null");
     const [secondAttr, setSecondAttr] = useState("null");
     const [thirdAttr, setThirdAttr] = useState("null");
     const [selectedCell, setSelectedCell] = useState(null);//for highlighting the selected cell in the treemap
@@ -34,6 +35,8 @@ const App = () => {
         return <p>Loading...</p>
     }
     const attributes = [ firstAttr, secondAttr, thirdAttr ].filter( d => d !== "null");
+    while (attributes.length < 3) attributes.push("_placeholder");
+
     const onFristAttrChange = ( attr ) => {
         setFirstAttr(attr);
     }
@@ -47,9 +50,7 @@ const App = () => {
         setSelectedDisease(disease);
     }
     const data = rawData.filter(d => d[selectedDisease] === "1");
-    // console.log("data:", data);
     const tree_ = getTree(data, attributes);
-    console.log("tree:", tree_);
     const tree = {"name":"root", "children": tree_};
     const options = [{value: "null", label: "None"},{value: "gender", label: "Gender"}, {value: "stroke", label: "Stroke"},
         {value: "heart_disease", label: "Heart Disease"}, {value: "hypertension", label: "Hypertension"}, {value: "ever_married", label: "Ever Married"}];
@@ -169,5 +170,5 @@ const App = () => {
         </Row>
     </Container>
 }
-// import App from "../components/assignment6";
+
 export default App;
